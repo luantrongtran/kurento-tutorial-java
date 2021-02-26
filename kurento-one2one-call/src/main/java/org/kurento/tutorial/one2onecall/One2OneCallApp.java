@@ -21,10 +21,14 @@ import org.kurento.client.KurentoClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+
 
 /**
  * Video call 1 to 1 demo (main).
@@ -35,7 +39,7 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
  */
 @SpringBootApplication
 @EnableWebSocket
-public class One2OneCallApp implements WebSocketConfigurer {
+public class One2OneCallApp implements WebSocketMessageBrokerConfigurer {
 
   @Bean
   public CallHandler callHandler() {
@@ -60,8 +64,14 @@ public class One2OneCallApp implements WebSocketConfigurer {
   }
 
   @Override
-  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-    registry.addHandler(callHandler(), "/call");
+  public void configureMessageBroker(MessageBrokerRegistry registry) {
+    registry.setApplicationDestinationPrefixes("/ws");
+    registry.enableSimpleBroker("/topic/", "/queue");
+  }
+
+  @Override
+  public void registerStompEndpoints(StompEndpointRegistry registry) {
+    registry.addEndpoint("/ws/webrtc-events").setAllowedOrigins("*");
   }
 
   public static void main(String[] args) throws Exception {
